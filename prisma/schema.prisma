@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admins {
+  id            Int              @id @default(autoincrement())
+  name          String
+  username      String
+  password      String
+  isSuperAdmin  Boolean          @default(false)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  announcement  Announcements[]
+  documentation Documentations[]
+  report        Reports[]
+}
+
+model Announcements {
+  id          Int      @id @default(autoincrement())
+  title       String
+  imageUrl    String?
+  fileId      String?  @unique
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int
+  updatedBy   Int?
+  admin       Admins   @relation(fields: [createdBy], references: [id], onUpdate: Cascade)
+}
+
+model Documentations {
+  id          Int      @id @default(autoincrement())
+  title       String?
+  imageUrl    String
+  fileId      String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int
+  updatedBy   Int?
+  admin       Admins   @relation(fields: [createdBy], references: [id], onUpdate: Cascade)
+}
+
+model Reports {
+  id          Int      @id @default(autoincrement())
+  title       String?
+  fileUrl     String
+  fileId      String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   Int
+  updatedBy   Int?
+  admin       Admins   @relation(fields: [createdBy], references: [id], onUpdate: Cascade)
+}
