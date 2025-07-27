@@ -53,14 +53,15 @@ model Documentations {
 }
 
 model Reports {
-  id          Int      @id @default(autoincrement())
-  title       String?
-  fileUrl     String
-  fileId      String   @unique
-  description String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   Int
-  updatedBy   Int?
-  admin       Admins   @relation(fields: [createdBy], references: [id], onUpdate: Cascade)
+  id            Int      @id @default(autoincrement())
+  title         String?
+  fileUrl       String
+  fileId        String   @unique
+  description   String?
+  fundingSource String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  createdBy     Int
+  updatedBy     Int?
+  admin         Admins   @relation(fields: [createdBy], references: [id], onUpdate: Cascade)
 }
