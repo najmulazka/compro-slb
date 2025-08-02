@@ -21,12 +21,21 @@ module.exports = {
         file: strFile,
       });
 
+      let date = new Date();
+      let semester;
+      if (date.toISOString().split('-')[1] <= 6) {
+        semester = `1-${date.toISOString().split('-')[0]}`;
+      } else {
+        semester = `2-${date.toISOString().split('-')[0]}`;
+      }
+
       const announcements = await prisma.announcements.create({
         data: {
           title,
           imageUrl: url,
           fileId,
           description,
+          semester,
           createdBy: Number(req.user.id),
         },
       });
@@ -39,22 +48,17 @@ module.exports = {
 
   getAnnouncements: async (req, res, next) => {
     try {
-      const announcements = await prisma.$queryRaw`SELECT
-      CASE
-        WHEN EXTRACT(MONTH FROM "createdAt") BETWEEN 1 AND 6 THEN 'Semester 1'
-        ELSE 'Semester 2'
-      END AS semester,
-      EXTRACT(YEAR FROM "createdAt") AS year,
-      json_agg(a.*) AS data
-    FROM
-      "Announcements" a
-    GROUP BY
-      semester,
-      year
-    ORDER BY
-      year,
-      semester;
-    `;
+      const { semester } = req.query;
+      let announcements;
+      if (!semester) {
+        announcements = await prisma.announcements.groupBy({
+          by: ['semester'],
+          _count: true,
+          orderBy: { semester: 'desc' },
+        });
+      } else {
+        announcements = await prisma.announcements.findMany({ where: { semester } });
+      }
 
       res.sendResponse(200, 'OK', null, announcements);
     } catch (err) {

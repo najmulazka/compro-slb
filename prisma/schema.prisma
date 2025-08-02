@@ -32,6 +32,7 @@ model Announcements {
   imageUrl    String?
   fileId      String?  @unique
   description String
+  semester    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdBy   Int
@@ -45,6 +46,7 @@ model Documentations {
   imageUrl    String
   fileId      String   @unique
   description String?
+  semester    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdBy   Int
@@ -59,6 +61,7 @@ model Reports {
   fileId        String   @unique
   description   String?
   fundingSource String
+  semester      String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   createdBy     Int

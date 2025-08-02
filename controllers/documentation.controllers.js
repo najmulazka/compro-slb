@@ -21,12 +21,15 @@ module.exports = {
         file: strFile,
       });
 
+      let dateSplit = date.split('/');
+
       const documentation = await prisma.documentations.create({
         data: {
           title,
           imageUrl: url,
           fileId,
           description,
+          semester: `${dateSplit[1]}-${dateSplit[0]}`,
           createdAt: new Date(date),
           createdBy: Number(req.user.id),
         },
@@ -40,19 +43,24 @@ module.exports = {
 
   getDocumentations: async (req, res, next) => {
     try {
-      const documentations = await prisma.$queryRaw`
-  SELECT
-    EXTRACT(YEAR FROM "createdAt") AS year,
-    TO_CHAR("createdAt", 'Month') AS month_name,
-    EXTRACT(MONTH FROM "createdAt") AS month,
-    json_agg(a.* ORDER BY "createdAt") AS data
-  FROM
-    "Documentations" a
-  GROUP BY
-    year, month, month_name
-  ORDER BY
-    year, month;
-`;
+      const { semester } = req.query;
+      let documentations;
+
+      if (!semester) {
+        documentations = await prisma.documentations.groupBy({
+          by: ['semester'],
+          _count: true,
+          orderBy: {
+            semester: 'desc',
+          },
+        });
+      } else {
+        documentations = await prisma.documentations.findMany({
+          where: {
+            semester,
+          },
+        });
+      }
 
       res.sendResponse(200, 'OK', null, documentations);
     } catch (err) {
@@ -105,6 +113,7 @@ module.exports = {
         console.warn('Failed to delete old file from ImageKit:', error?.message || error);
       }
 
+      let dateSplit = date.split('/');
       const documentation = await prisma.documentations.update({
         where: { id: Number(id) },
         data: {
@@ -112,6 +121,7 @@ module.exports = {
           imageUrl: url,
           fileId,
           description: description ?? documentationExist.description,
+          semester: `${dateSplit[1]}-${dateSplit[0]}`,
           createdAt: new Date(date),
           updatedBy: Number(req.user.id),
         },
