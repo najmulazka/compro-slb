@@ -1,0 +1,9 @@
+PORT=3000
+
+# This was inserted by `prisma init`:
+[object Promise]
+DATABASE_URL="postgresql://najmul:najmul123@localhost:5432/slbaisyiyah?schema=public"
+IMAGEKIT_PUBLIC_KEY="public_lkmQpI0dtilDgYeta1gh0PC9BZM="
+IMAGEKIT_PRIVATE_KEY="private_980EiWlB3a+vLqf0vtYukPRPMCE="
+IMAGEKIT_URL_ENDPOINT="https://ik.imagekit.io/6cgcgmnq1"
+JWT_SECRET_KEY="comproaisyiyah"

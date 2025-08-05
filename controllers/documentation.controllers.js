@@ -1,6 +1,7 @@
-const prisma = require('../libs/prisma.libs');
-const path = require('path');
-const imagekit = require('../libs/imagekit.libs');
+const prisma = require("../libs/prisma.libs");
+const path = require("path");
+const imagekit = require("../libs/imagekit.libs");
+const { get } = require("http");
 
 module.exports = {
   createdDocumentation: async (req, res, next) => {
@@ -9,19 +10,22 @@ module.exports = {
       if (!req.file) {
         return res.status(400).json({
           status: false,
-          message: 'Bad Request',
-          err: 'File is required',
+          message: "Bad Request",
+          err: "File is required",
           data: null,
         });
       }
 
-      let strFile = req.file.buffer.toString('base64');
+      let strFile = req.file.buffer.toString("base64");
       const { url, fileId } = await imagekit.upload({
         fileName: Date.now() + path.extname(req.file.originalname),
         file: strFile,
       });
 
-      let dateSplit = date.split('/');
+      const parsedDate = new Date(date);
+      const month = (parsedDate.getMonth() + 1).toString().padStart(2, "0"); // "01" to "12"
+      const year = parsedDate.getFullYear();
+      const semester = `${month}-${year}`;
 
       const documentation = await prisma.documentations.create({
         data: {
@@ -29,13 +33,13 @@ module.exports = {
           imageUrl: url,
           fileId,
           description,
-          semester: `${dateSplit[1]}-${dateSplit[0]}`,
+          semester: semester,
           createdAt: new Date(date),
           createdBy: Number(req.user.id),
         },
       });
 
-      res.sendResponse(200, 'OK', null, documentation);
+      res.sendResponse(200, "OK", null, documentation);
     } catch (err) {
       next(err);
     }
@@ -48,10 +52,10 @@ module.exports = {
 
       if (!semester) {
         documentations = await prisma.documentations.groupBy({
-          by: ['semester'],
+          by: ["semester"],
           _count: true,
           orderBy: {
-            semester: 'desc',
+            semester: "desc",
           },
         });
       } else {
@@ -59,10 +63,11 @@ module.exports = {
           where: {
             semester,
           },
+          orderBy: { createdAt: "desc" },
         });
       }
 
-      res.sendResponse(200, 'OK', null, documentations);
+      res.sendResponse(200, "OK", null, documentations);
     } catch (err) {
       next(err);
     }
@@ -71,13 +76,45 @@ module.exports = {
   getDocumentation: async (req, res, next) => {
     try {
       const { id } = req.params;
-      const documentation = await prisma.documentations.findUnique({ where: { id: Number(id) } });
+      const documentation = await prisma.documentations.findUnique({
+        where: { id: Number(id) },
+      });
 
       if (!documentation) {
-        return res.sendResponse(404, 'Not Found', 'Resource not found', null);
+        return res.sendResponse(404, "Not Found", "Resource not found", null);
       }
 
-      res.sendResponse(200, 'OK', null, documentation);
+      res.sendResponse(200, "OK", null, documentation);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  getAllDocumentations: async (req, res, next) => {
+    const { limit } = req.query;
+    let finalLimit = parseInt(limit) || 10;
+    try {
+      const documentations = await prisma.documentations.findMany({
+        orderBy: { updatedAt: "desc" },
+        take: finalLimit,
+        include: {
+          admin: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+            },
+          },
+          updatedAdmin: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+            },
+          },
+        },
+      });
+      res.sendResponse(200, "OK", null, documentations);
     } catch (err) {
       next(err);
     }
@@ -90,30 +127,35 @@ module.exports = {
       if (!req.file) {
         return res.status(400).json({
           status: false,
-          message: 'Bad Request',
-          err: 'File is required',
+          message: "Bad Request",
+          err: "File is required",
           data: null,
         });
       }
 
-      let strFile = req.file.buffer.toString('base64');
+      let strFile = req.file.buffer.toString("base64");
       const { url, fileId } = await imagekit.upload({
         fileName: Date.now() + path.extname(req.file.originalname),
         file: strFile,
       });
 
-      const documentationExist = await prisma.documentations.findUnique({ where: { id: Number(id) } });
+      const documentationExist = await prisma.documentations.findUnique({
+        where: { id: Number(id) },
+      });
       if (!documentationExist) {
-        return res.sendResponse(404, 'Not Found', 'Resource Not Found', null);
+        return res.sendResponse(404, "Not Found", "Resource Not Found", null);
       }
 
       try {
         await imagekit.deleteFile(documentationExist.fileId);
       } catch (error) {
-        console.warn('Failed to delete old file from ImageKit:', error?.message || error);
+        console.warn(
+          "Failed to delete old file from ImageKit:",
+          error?.message || error
+        );
       }
 
-      let dateSplit = date.split('/');
+      let dateSplit = date.split("/");
       const documentation = await prisma.documentations.update({
         where: { id: Number(id) },
         data: {
@@ -127,7 +169,7 @@ module.exports = {
         },
       });
 
-      res.sendResponse(200, 'OK', null, documentation);
+      res.sendResponse(200, "OK", null, documentation);
     } catch (err) {
       next(err);
     }
@@ -137,22 +179,27 @@ module.exports = {
     try {
       const { id } = req.params;
 
-      const documentationExist = await prisma.documentations.findUnique({ where: { id: Number(id) } });
+      const documentationExist = await prisma.documentations.findUnique({
+        where: { id: Number(id) },
+      });
       if (!documentationExist) {
-        return res.sendResponse(404, 'Not Found', 'Resource Not Found', null);
+        return res.sendResponse(404, "Not Found", "Resource Not Found", null);
       }
 
       try {
         await imagekit.deleteFile(documentationExist.fileId);
       } catch (error) {
-        console.warn('Failed to delete old file from ImageKit:', error?.message || error);
+        console.warn(
+          "Failed to delete old file from ImageKit:",
+          error?.message || error
+        );
       }
 
       const documentation = await prisma.documentations.delete({
         where: { id: Number(id) },
       });
 
-      res.sendResponse(200, 'OK', null, documentation);
+      res.sendResponse(200, "OK", null, documentation);
     } catch (err) {
       next(err);
     }
