@@ -1,6 +1,7 @@
-const prisma = require('../libs/prisma.libs');
-const path = require('path');
-const imagekit = require('../libs/imagekit.libs');
+const prisma = require("../libs/prisma.libs");
+const path = require("path");
+const imagekit = require("../libs/imagekit.libs");
+const { get } = require("http");
 
 module.exports = {
   createReport: async (req, res, next) => {
@@ -9,19 +10,21 @@ module.exports = {
       if (!req.file) {
         return res.status(400).json({
           status: false,
-          message: 'Bad Request',
-          err: 'File is required',
+          message: "Bad Request",
+          err: "File is required",
           data: null,
         });
       }
 
-      let strFile = req.file.buffer.toString('base64');
+      let strFile = req.file.buffer.toString("base64");
       const { url, fileId } = await imagekit.upload({
         fileName: Date.now() + path.extname(req.file.originalname),
         file: strFile,
       });
 
-      let dateSplit = date.split('/');
+      const parsedDate = new Date(date);
+      const year = parsedDate.getFullYear();
+
       const report = await prisma.reports.create({
         data: {
           title,
@@ -29,13 +32,13 @@ module.exports = {
           fileId,
           description,
           fundingSource,
-          semester: dateSplit[0],
+          semester: year.toString(),
           createdAt: new Date(date),
           createdBy: Number(req.user.id),
         },
       });
 
-      res.sendResponse(200, 'OK', null, report);
+      res.sendResponse(200, "OK", null, report);
     } catch (err) {
       next(err);
     }
@@ -47,10 +50,10 @@ module.exports = {
       let reports;
       if (!semester) {
         reports = await prisma.reports.groupBy({
-          by: ['semester'],
+          by: ["semester"],
           _count: true,
           orderBy: {
-            semester: 'desc',
+            semester: "desc",
           },
         });
       } else {
@@ -58,10 +61,11 @@ module.exports = {
           where: {
             semester,
           },
+          orderBy: { createdAt: "desc" },
         });
       }
 
-      res.sendResponse(200, 'OK', null, reports);
+      res.sendResponse(200, "OK", null, reports);
     } catch (err) {
       next(err);
     }
@@ -70,13 +74,45 @@ module.exports = {
   getReport: async (req, res, next) => {
     try {
       const { id } = req.params;
-      const report = await prisma.reports.findUnique({ where: { id: Number(id) } });
+      const report = await prisma.reports.findUnique({
+        where: { id: Number(id) },
+      });
 
       if (!report) {
-        return res.sendResponse(404, 'Not Found', 'Resource not found', null);
+        return res.sendResponse(404, "Not Found", "Resource not found", null);
       }
 
-      res.sendResponse(200, 'OK', null, report);
+      res.sendResponse(200, "OK", null, report);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  getAllReports: async (req, res, next) => {
+    const { limit } = req.query;
+    let finalLimit = parseInt(limit) || 10;
+    try {
+      const reports = await prisma.reports.findMany({
+        orderBy: { updatedAt: "desc" },
+        take: finalLimit,
+        include: {
+          admin: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+            },
+          },
+          updatedAdmin: {
+            select: {
+              id: true,
+              name: true,
+              username: true,
+            },
+          },
+        },
+      });
+      res.sendResponse(200, "OK", null, reports);
     } catch (err) {
       next(err);
     }
@@ -89,30 +125,35 @@ module.exports = {
       if (!req.file) {
         return res.status(400).json({
           status: false,
-          message: 'Bad Request',
-          err: 'File is required',
+          message: "Bad Request",
+          err: "File is required",
           data: null,
         });
       }
 
-      let strFile = req.file.buffer.toString('base64');
+      let strFile = req.file.buffer.toString("base64");
       const { url, fileId } = await imagekit.upload({
         fileName: Date.now() + path.extname(req.file.originalname),
         file: strFile,
       });
 
-      const reportExist = await prisma.reports.findUnique({ where: { id: Number(id) } });
+      const reportExist = await prisma.reports.findUnique({
+        where: { id: Number(id) },
+      });
       if (!reportExist) {
-        return res.sendResponse(404, 'Not Found', 'Resource Not Found', null);
+        return res.sendResponse(404, "Not Found", "Resource Not Found", null);
       }
 
       try {
         await imagekit.deleteFile(reportExist.fileId);
       } catch (error) {
-        console.warn('Failed to delete old file from ImageKit:', error?.message || error);
+        console.warn(
+          "Failed to delete old file from ImageKit:",
+          error?.message || error
+        );
       }
 
-      let dateSplit = date.split('/');
+      let dateSplit = date.split("/");
 
       const report = await prisma.reports.update({
         where: { id: Number(id) },
@@ -128,7 +169,7 @@ module.exports = {
         },
       });
 
-      res.sendResponse(200, 'OK', null, report);
+      res.sendResponse(200, "OK", null, report);
     } catch (err) {
       next(err);
     }
@@ -138,22 +179,27 @@ module.exports = {
     try {
       const { id } = req.params;
 
-      const reportExist = await prisma.reports.findUnique({ where: { id: Number(id) } });
+      const reportExist = await prisma.reports.findUnique({
+        where: { id: Number(id) },
+      });
       if (!reportExist) {
-        return res.sendResponse(404, 'Not Found', 'Resource Not Found', null);
+        return res.sendResponse(404, "Not Found", "Resource Not Found", null);
       }
 
       try {
         await imagekit.deleteFile(reportExist.fileId);
       } catch (error) {
-        console.warn('Failed to delete old file from ImageKit:', error?.message || error);
+        console.warn(
+          "Failed to delete old file from ImageKit:",
+          error?.message || error
+        );
       }
 
       const report = await prisma.reports.delete({
         where: { id: Number(id) },
       });
 
-      res.sendResponse(200, 'OK', null, report);
+      res.sendResponse(200, "OK", null, report);
     } catch (err) {
       next(err);
     }

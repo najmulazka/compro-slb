@@ -10,7 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -21,9 +21,12 @@ model Admins {
   password      String
   createdAt     DateTime         @default(now())
   updatedAt     DateTime         @updatedAt
-  announcement  Announcements[]
-  documentation Documentations[]
-  report        Reports[]
+  announcement  Announcements[] @relation("CreatedBy")
+  updatedAnnouncement Announcements[] @relation("UpdatedBy")
+  documentation Documentations[] @relation("CreatedBy")
+  updatedDocumentation Documentations[] @relation("UpdatedBy")
+  report        Reports[] @relation("CreatedBy")
+  updatedReport Reports[] @relation("UpdatedBy")
 }
 
 model Announcements {
@@ -37,7 +40,8 @@ model Announcements {
   updatedAt   DateTime @updatedAt
   createdBy   Int
   updatedBy   Int?
-  admin       Admins   @relation(fields: [createdBy], references: [id], onUpdate: Cascade)
+  admin       Admins   @relation("CreatedBy",fields: [createdBy], references: [id], onUpdate: Cascade)
+updatedAdmin  Admins?  @relation("UpdatedBy",fields: [updatedBy], references: [id], onUpdate: Cascade)
 }
 
 model Documentations {
@@ -51,7 +55,8 @@ model Documentations {
   updatedAt   DateTime @updatedAt
   createdBy   Int
   updatedBy   Int?
-  admin       Admins   @relation(fields: [createdBy], references: [id], onUpdate: Cascade)
+  admin       Admins   @relation("CreatedBy",fields: [createdBy], references: [id], onUpdate: Cascade)
+  updatedAdmin Admins?  @relation("UpdatedBy",fields: [updatedBy], references: [id], onUpdate: Cascade)
 }
 
 model Reports {
@@ -66,5 +71,6 @@ model Reports {
   updatedAt     DateTime @updatedAt
   createdBy     Int
   updatedBy     Int?
-  admin         Admins   @relation(fields: [createdBy], references: [id], onUpdate: Cascade)
+  admin         Admins   @relation("CreatedBy",fields: [createdBy], references: [id], onUpdate: Cascade)
+  updatedAdmin  Admins?  @relation("UpdatedBy",fields: [updatedBy], references: [id], onUpdate: Cascade)
 }
