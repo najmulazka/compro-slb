@@ -10,53 +10,53 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Admins {
-  id            Int              @id @default(autoincrement())
-  name          String
-  username      String           @unique
-  password      String
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  announcement  Announcements[] @relation("CreatedBy")
-  updatedAnnouncement Announcements[] @relation("UpdatedBy")
-  documentation Documentations[] @relation("CreatedBy")
+  id                   Int              @id @default(autoincrement())
+  name                 String
+  username             String           @unique
+  password             String
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+  announcement         Announcements[]  @relation("CreatedBy")
+  updatedAnnouncement  Announcements[]  @relation("UpdatedBy")
+  documentation        Documentations[] @relation("CreatedBy")
   updatedDocumentation Documentations[] @relation("UpdatedBy")
-  report        Reports[] @relation("CreatedBy")
-  updatedReport Reports[] @relation("UpdatedBy")
+  report               Reports[]        @relation("CreatedBy")
+  updatedReport        Reports[]        @relation("UpdatedBy")
 }
 
 model Announcements {
-  id          Int      @id @default(autoincrement())
-  title       String
-  imageUrl    String?
-  fileId      String?  @unique
-  description String
-  semester    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   Int
-  updatedBy   Int?
-  admin       Admins   @relation("CreatedBy",fields: [createdBy], references: [id], onUpdate: Cascade)
-updatedAdmin  Admins?  @relation("UpdatedBy",fields: [updatedBy], references: [id], onUpdate: Cascade)
+  id           Int      @id @default(autoincrement())
+  title        String
+  imageUrl     String?
+  fileId       String?  @unique
+  description  String
+  semester     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    Int
+  updatedBy    Int?
+  admin        Admins   @relation("CreatedBy", fields: [createdBy], references: [id], onUpdate: Cascade)
+  updatedAdmin Admins?  @relation("UpdatedBy", fields: [updatedBy], references: [id], onUpdate: Cascade)
 }
 
 model Documentations {
-  id          Int      @id @default(autoincrement())
-  title       String?
-  imageUrl    String
-  fileId      String   @unique
-  description String?
-  semester    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  createdBy   Int
-  updatedBy   Int?
-  admin       Admins   @relation("CreatedBy",fields: [createdBy], references: [id], onUpdate: Cascade)
-  updatedAdmin Admins?  @relation("UpdatedBy",fields: [updatedBy], references: [id], onUpdate: Cascade)
+  id           Int      @id @default(autoincrement())
+  title        String?
+  imageUrl     String
+  fileId       String   @unique
+  description  String?
+  semester     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  createdBy    Int
+  updatedBy    Int?
+  admin        Admins   @relation("CreatedBy", fields: [createdBy], references: [id], onUpdate: Cascade)
+  updatedAdmin Admins?  @relation("UpdatedBy", fields: [updatedBy], references: [id], onUpdate: Cascade)
 }
 
 model Reports {
@@ -71,6 +71,6 @@ model Reports {
   updatedAt     DateTime @updatedAt
   createdBy     Int
   updatedBy     Int?
-  admin         Admins   @relation("CreatedBy",fields: [createdBy], references: [id], onUpdate: Cascade)
-  updatedAdmin  Admins?  @relation("UpdatedBy",fields: [updatedBy], references: [id], onUpdate: Cascade)
+  admin         Admins   @relation("CreatedBy", fields: [createdBy], references: [id], onUpdate: Cascade)
+  updatedAdmin  Admins?  @relation("UpdatedBy", fields: [updatedBy], references: [id], onUpdate: Cascade)
 }

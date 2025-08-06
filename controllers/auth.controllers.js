@@ -63,4 +63,17 @@ module.exports = {
       next(err);
     }
   },
+
+  whoami: async (req, res, next) => {
+    try {
+      res.status(200).json({
+        status: true,
+        message: 'OK',
+        err: null,
+        data: { user: req.user },
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
 };
