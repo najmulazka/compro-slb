@@ -22,10 +22,7 @@ module.exports = {
         file: strFile,
       });
 
-      const parsedDate = new Date(date);
-      const month = (parsedDate.getMonth() + 1).toString().padStart(2, "0"); // "01" to "12"
-      const year = parsedDate.getFullYear();
-      const semester = `${month}-${year}`;
+      let dateSplit = date.split("-");
 
       const documentation = await prisma.documentations.create({
         data: {
@@ -33,7 +30,7 @@ module.exports = {
           imageUrl: url,
           fileId,
           description,
-          semester: semester,
+          semester: `${dateSplit[1]}-${dateSplit[0]}`,
           createdAt: new Date(date),
           createdBy: Number(req.user.id),
         },
@@ -155,7 +152,7 @@ module.exports = {
         );
       }
 
-      let dateSplit = date.split("/");
+      let dateSplit = date.split("-");
       const documentation = await prisma.documentations.update({
         where: { id: Number(id) },
         data: {

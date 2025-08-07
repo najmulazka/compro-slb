@@ -22,8 +22,7 @@ module.exports = {
         file: strFile,
       });
 
-      const parsedDate = new Date(date);
-      const year = parsedDate.getFullYear();
+      let dateSplit = date.split("-");
 
       const report = await prisma.reports.create({
         data: {
@@ -32,7 +31,7 @@ module.exports = {
           fileId,
           description,
           fundingSource,
-          semester: year.toString(),
+          semester: dateSplit[1],
           createdAt: new Date(date),
           createdBy: Number(req.user.id),
         },
@@ -153,7 +152,7 @@ module.exports = {
         );
       }
 
-      let dateSplit = date.split("/");
+      let dateSplit = date.split("-");
 
       const report = await prisma.reports.update({
         where: { id: Number(id) },
