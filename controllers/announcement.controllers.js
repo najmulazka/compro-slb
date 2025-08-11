@@ -1,6 +1,6 @@
-const prisma = require("../libs/prisma.libs");
-const path = require("path");
-const imagekit = require("../libs/imagekit.libs");
+const prisma = require('../libs/prisma.libs');
+const path = require('path');
+const imagekit = require('../libs/imagekit.libs');
 
 module.exports = {
   createAnnouncement: async (req, res, next) => {
@@ -9,13 +9,13 @@ module.exports = {
       if (!req.file) {
         return res.status(400).json({
           status: false,
-          message: "Bad Request",
-          err: "File is required",
+          message: 'Bad Request',
+          err: 'File is required',
           data: null,
         });
       }
 
-      let strFile = req.file.buffer.toString("base64");
+      let strFile = req.file.buffer.toString('base64');
       const { url, fileId } = await imagekit.upload({
         fileName: Date.now() + path.extname(req.file.originalname),
         file: strFile,
@@ -23,11 +23,14 @@ module.exports = {
 
       let date = new Date();
       let semester;
-      if (date.toISOString().split("-")[1] <= 6) {
-        semester = `1-${date.toISOString().split("-")[0]}`;
+      if (date.toISOString().split('-')[1] <= 6) {
+        // semester = `1-${date.toISOString().split("-")[0]}`;
+        semester = `Tahun ajaran ${date.toISOString().split('-')[0]}/${Number(date.toISOString().split('-')[0]) + 1} - Semester 1`;
       } else {
-        semester = `2-${date.toISOString().split("-")[0]}`;
+        semester = `Tahun ajaran ${date.toISOString().split('-')[0]}/${Number(date.toISOString().split('-')[0]) + 1} - Semester 2`;
       }
+
+      // tahun ajaran 2025/2026 - Semester I
 
       const announcements = await prisma.announcements.create({
         data: {
@@ -40,7 +43,7 @@ module.exports = {
         },
       });
 
-      res.sendResponse(200, "OK", null, announcements);
+      res.sendResponse(200, 'OK', null, announcements);
     } catch (err) {
       next(err);
     }
@@ -52,13 +55,13 @@ module.exports = {
       let announcements;
       if (!semester) {
         announcements = await prisma.announcements.groupBy({
-          by: ["semester"],
+          by: ['semester'],
           _count: true,
-          orderBy: { semester: "desc" },
+          orderBy: { semester: 'desc' },
         });
         announcements.sort((a, b) => {
-          const [semA, yearA] = a.semester.split("-").map(Number);
-          const [semB, yearB] = b.semester.split("-").map(Number);
+          const [semA, yearA] = a.semester.split('-').map(Number);
+          const [semB, yearB] = b.semester.split('-').map(Number);
 
           if (yearA !== yearB) return yearB - yearA; // Descending year
           return semB - semA; // Descending semester (2 dulu baru 1)
@@ -66,11 +69,11 @@ module.exports = {
       } else {
         announcements = await prisma.announcements.findMany({
           where: { semester },
-          orderBy: { createdAt: "desc" },
+          orderBy: { createdAt: 'desc' },
         });
       }
 
-      res.sendResponse(200, "OK", null, announcements);
+      res.sendResponse(200, 'OK', null, announcements);
     } catch (err) {
       next(err);
     }
@@ -84,10 +87,10 @@ module.exports = {
       });
 
       if (!announcement) {
-        return res.sendResponse(404, "Not Found", "Resource not found", null);
+        return res.sendResponse(404, 'Not Found', 'Resource not found', null);
       }
 
-      res.sendResponse(200, "OK", null, announcement);
+      res.sendResponse(200, 'OK', null, announcement);
     } catch (err) {
       next(err);
     }
@@ -98,7 +101,7 @@ module.exports = {
     let finalLimit = parseInt(limit) || 10;
     try {
       const announcements = await prisma.announcements.findMany({
-        orderBy: { createdAt: "desc" },
+        orderBy: { createdAt: 'desc' },
         take: finalLimit,
         include: {
           admin: {
@@ -118,7 +121,7 @@ module.exports = {
         },
       });
 
-      res.sendResponse(200, "OK", null, announcements);
+      res.sendResponse(200, 'OK', null, announcements);
     } catch (err) {
       next(err);
     }
@@ -131,13 +134,13 @@ module.exports = {
       if (!req.file) {
         return res.status(400).json({
           status: false,
-          message: "Bad Request",
-          err: "File is required",
+          message: 'Bad Request',
+          err: 'File is required',
           data: null,
         });
       }
 
-      let strFile = req.file.buffer.toString("base64");
+      let strFile = req.file.buffer.toString('base64');
       const { url, fileId } = await imagekit.upload({
         fileName: Date.now() + path.extname(req.file.originalname),
         file: strFile,
@@ -147,16 +150,13 @@ module.exports = {
         where: { id: Number(id) },
       });
       if (!announcementExist) {
-        return res.sendResponse(404, "Not Found", "Resource Not Found", null);
+        return res.sendResponse(404, 'Not Found', 'Resource Not Found', null);
       }
 
       try {
         await imagekit.deleteFile(announcementExist.fileId);
       } catch (error) {
-        console.warn(
-          "Failed to delete old file from ImageKit:",
-          error?.message || error
-        );
+        console.warn('Failed to delete old file from ImageKit:', error?.message || error);
       }
 
       const announcement = await prisma.announcements.update({
@@ -170,7 +170,7 @@ module.exports = {
         },
       });
 
-      res.sendResponse(200, "OK", null, announcement);
+      res.sendResponse(200, 'OK', null, announcement);
     } catch (err) {
       next(err);
     }
@@ -184,23 +184,20 @@ module.exports = {
         where: { id: Number(id) },
       });
       if (!announcementExist) {
-        return res.sendResponse(404, "Not Found", "Resource Not Found", null);
+        return res.sendResponse(404, 'Not Found', 'Resource Not Found', null);
       }
 
       try {
         await imagekit.deleteFile(announcementExist.fileId);
       } catch (error) {
-        console.warn(
-          "Failed to delete old file from ImageKit:",
-          error?.message || error
-        );
+        console.warn('Failed to delete old file from ImageKit:', error?.message || error);
       }
 
       const announcement = await prisma.announcements.delete({
         where: { id: Number(id) },
       });
 
-      res.sendResponse(200, "OK", null, announcement);
+      res.sendResponse(200, 'OK', null, announcement);
     } catch (err) {
       next(err);
     }

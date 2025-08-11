@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const announcement = require('./announcements.routes');
 const documentation = require('./documentations.routes');
+const classes = require('./class.routes');
 const report = require('./reports.routes');
 const auth = require('./auth.routes');
 const { restrict } = require('../middlewares/restrict.middleware');
@@ -8,6 +9,7 @@ const { whoami } = require('../controllers/auth.controllers');
 
 router.use('/announcement', announcement);
 router.use('/documentation', documentation);
+router.use('/class', classes);
 router.use('/report', report);
 router.use('/auth', auth);
 router.get('/me', restrict, whoami);
