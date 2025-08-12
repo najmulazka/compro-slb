@@ -1,21 +1,35 @@
-const prisma = require('../libs/prisma.libs');
-const path = require('path');
-const imagekit = require('../libs/imagekit.libs');
-const { get } = require('http');
+const prisma = require("../libs/prisma.libs");
+const path = require("path");
+const imagekit = require("../libs/imagekit.libs");
+const { get } = require("http");
 
 module.exports = {
   createClass: async (req, res, next) => {
-    const { level, gender, amout } = req.body;
+    const { level, male, female } = req.body;
     try {
       const classes = await prisma.class.create({
         data: {
           level,
-          gender,
-          amout,
+          male,
+          female,
+          createdBy: Number(req.user.id),
         },
       });
 
-      res.sendResponse(200, 'OK', null, classes);
+      res.sendResponse(200, "OK", null, classes);
+    } catch (err) {
+      next(err);
+    }
+  },
+
+  getClassById: async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const classes = await prisma.class.findUnique({
+        where: { id: Number(id) },
+      });
+
+      res.sendResponse(200, "OK", null, classes);
     } catch (err) {
       next(err);
     }
@@ -25,7 +39,7 @@ module.exports = {
     try {
       const classes = await prisma.class.findMany();
 
-      res.sendResponse(200, 'OK', null, classes);
+      res.sendResponse(200, "OK", null, classes);
     } catch (err) {
       next(err);
     }
@@ -34,27 +48,26 @@ module.exports = {
   updateClass: async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { level, gender, amount } = req.body;
+      const { level, male, female } = req.body;
 
       const classExist = await prisma.class.findUnique({
         where: { id: Number(id) },
       });
       if (!classExist) {
-        return res.sendResponse(404, 'Not Found', 'Resource Not Found', null);
+        return res.sendResponse(404, "Not Found", "Resource Not Found", null);
       }
 
       const classes = await prisma.class.update({
         where: { id: Number(id) },
         data: {
           level: level ?? classExist.title,
-          gender: gender ?? classExist.gender,
-          amount: amount ?? classExist.amount,
-          createdAt: new Date(date),
+          male: male ?? classExist.title,
+          female: female ?? classExist.title,
           updatedBy: Number(req.user.id),
         },
       });
 
-      res.sendResponse(200, 'OK', null, classes);
+      res.sendResponse(200, "OK", null, classes);
     } catch (err) {
       next(err);
     }
@@ -68,14 +81,14 @@ module.exports = {
         where: { id: Number(id) },
       });
       if (!classExist) {
-        return res.sendResponse(404, 'Not Found', 'Resource Not Found', null);
+        return res.sendResponse(404, "Not Found", "Resource Not Found", null);
       }
 
       const classes = await prisma.class.delete({
         where: { id: Number(id) },
       });
 
-      res.sendResponse(200, 'OK', null, classes);
+      res.sendResponse(200, "OK", null, classes);
     } catch (err) {
       next(err);
     }

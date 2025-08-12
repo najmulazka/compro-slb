@@ -10,7 +10,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -34,15 +34,14 @@ model Admins {
 model Class {
   id           Int      @id @default(autoincrement())
   level        String
-  gender       String
-  amount       String
+  male         Int
+  female       Int
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   createdBy    Int
   updatedBy    Int?
   admin        Admins   @relation("CreatedBy", fields: [createdBy], references: [id], onUpdate: Cascade)
   updatedAdmin Admins?  @relation("UpdatedBy", fields: [updatedBy], references: [id], onUpdate: Cascade)
-  adminsId     Int?
 }
 
 model Announcements {
